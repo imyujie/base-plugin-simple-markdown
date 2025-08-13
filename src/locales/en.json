@@ -1,3 +1,5 @@
 {
-  "title":"这是英文标题"
+  "title": "Markdown Editor",
+  "selectTextCell": "Please select a multi-line text cell",
+  "clickToInput": "Click to input"
 }

@@ -1,3 +1,5 @@
 {
-  "title":"这是中文标题"
+  "title": "Markdown 编辑器",
+  "selectTextCell": "请选择一个多行文本单元格",
+  "clickToInput": "点击输入"
 }

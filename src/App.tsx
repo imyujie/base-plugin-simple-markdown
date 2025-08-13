@@ -1,6 +1,7 @@
 import './App.css';
 import { bitable, FieldType, IOpenSegment, ITextField, IOpenSegmentType } from "@lark-base-open/js-sdk";
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import debounce from 'lodash.debounce';
 import {
   MDXEditor,
@@ -15,6 +16,7 @@ import {
 import '@mdxeditor/editor/style.css';
 
 export default function App() {
+  const { t } = useTranslation();
   const [selectedCellContent, setSelectedCellContent] = useState<string>('');
   const [isTextCell, setIsTextCell] = useState<boolean>(false);
   const editorRef = useRef<MDXEditorMethods>(null);
@@ -25,7 +27,7 @@ export default function App() {
       const table = await bitable.base.getTableById(selection.tableId);
       await table.setCellValue(selection.fieldId, selection.recordId, content);
     }
-  }, 500)).current;
+  }, 1000)).current;
 
   useEffect(() => {
     const handleSelectionChange = async () => {
@@ -111,6 +113,7 @@ export default function App() {
             ref={editorRef}
             markdown={selectedCellContent}
             onChange={handleEditorChange}
+            placeholder={t('clickToInput')}
             contentEditableClassName="markdown-editor"
             plugins={[
               headingsPlugin(),
@@ -131,7 +134,7 @@ export default function App() {
           textAlign: 'center',
           color: 'gray'
         }}>
-          请选择一个多行文本单元格
+          {t('selectTextCell')}
         </div>
       )}
     </main>
