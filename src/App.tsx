@@ -14,6 +14,48 @@ import {
   MDXEditorMethods,
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
+import { textReplacePlugin } from './components/TextReplacePlugin';
+
+const markdownToSegments = (markdown: string): IOpenSegment[] => {
+  markdown = markdown.replace(/ +$/gm, '');
+  const segments: IOpenSegment[] = [];
+  // This regex finds [text](url) with non-greedy matching for the text part.
+  const linkRegex = /\[(.*?)\]\((.*?)\)/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkRegex.exec(markdown)) !== null) {
+    // Add the text part before the link
+    if (match.index > lastIndex) {
+      segments.push({
+        type: IOpenSegmentType.Text,
+        text: markdown.substring(lastIndex, match.index),
+      });
+    }
+    // Add the link part, and trim whitespace from the URL
+    segments.push({
+      type: IOpenSegmentType.Url,
+      text: match[1].replace(/\\([\[\]])/g, '$1'),
+      link: match[2].trim(),
+    });
+    lastIndex = linkRegex.lastIndex;
+  }
+
+  // Add the remaining text after the last link
+  if (lastIndex < markdown.length) {
+    segments.push({
+      type: IOpenSegmentType.Text,
+      text: markdown.substring(lastIndex),
+    });
+  }
+
+  // If markdown is empty, we should return an empty text segment to clear the cell
+  if (markdown.length === 0) {
+      return [{ type: IOpenSegmentType.Text, text: '' }];
+  }
+
+  return segments;
+};
 
 export default function App() {
   const { t } = useTranslation();
@@ -21,11 +63,12 @@ export default function App() {
   const [isTextCell, setIsTextCell] = useState<boolean>(false);
   const editorRef = useRef<MDXEditorMethods>(null);
 
-  const debouncedUpdateCell = useRef(debounce(async (content: string) => {
+  const debouncedUpdateCell = useRef(debounce(async (markdown: string) => {
     const selection = await bitable.base.getSelection();
     if (selection && selection.recordId && selection.fieldId && selection.tableId) {
       const table = await bitable.base.getTableById(selection.tableId);
-      await table.setCellValue(selection.fieldId, selection.recordId, content);
+      const segments = markdownToSegments(markdown);
+      await table.setCellValue(selection.fieldId, selection.recordId, segments);
     }
   }, 1000)).current;
 
@@ -75,7 +118,7 @@ export default function App() {
 
           if (isText) {
             // console.log("is Text：", cellValue);
-            setSelectedCellContent(cellValue);
+            setSelectedCellContent(cellValue.replace(/ +$/gm, ''));
           } else {
             setIsTextCell(false);
             setSelectedCellContent('');
@@ -102,6 +145,7 @@ export default function App() {
   }, [selectedCellContent, isTextCell]);
 
   const handleEditorChange = useCallback((markdown: string) => {
+    markdown = markdown.replace(/&#x20;\n/g, '\n');
     debouncedUpdateCell(markdown);
   }, [debouncedUpdateCell]);
 
@@ -122,6 +166,7 @@ export default function App() {
               quotePlugin(),
               thematicBreakPlugin(),
               markdownShortcutPlugin(),
+              textReplacePlugin(),
             ]}
           />
         </div>
