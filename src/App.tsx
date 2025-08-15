@@ -15,6 +15,7 @@ import {
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import { textReplacePlugin } from './components/TextReplacePlugin';
+import { tooltipPlugin } from './components/TooltipPlugin';
 
 const markdownToSegments = (markdown: string): IOpenSegment[] => {
   markdown = markdown.replace(/ +$/gm, '');
@@ -160,6 +161,7 @@ export default function App() {
             placeholder={t('clickToInput')}
             contentEditableClassName="markdown-editor"
             plugins={[
+              tooltipPlugin(),
               headingsPlugin(),
               listsPlugin(),
               linkPlugin(),

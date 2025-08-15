@@ -7,6 +7,9 @@ export default defineConfig({
     plugins: [react()],
     server: {
         host: "0.0.0.0",
+        headers: {
+            'Content-Security-Policy': "frame-ancestors 'self' https://*.larkoffice.com https://*.larksuite.com https://*.feishu.cn;",
+        }
     },
     build: {
         rollupOptions: {
