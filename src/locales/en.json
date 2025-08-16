@@ -1,5 +1,19 @@
 {
   "title": "Markdown Editor",
   "selectTextCell": "Please select a multi-line text cell",
-  "clickToInput": "Click to input"
+  "clickToInput": "Click to input",
+  "statusInProgress": "In Progress",
+  "statusAtRisk": "At Risk",
+  "statusOffTrack": "Off Track",
+  "statusNotUpdated": "Not Updated",
+  "slashCommandMenuTitle": "Status",
+  "invalidDateFormat": "Invalid date format",
+  "dateDoesNotExist": "Date does not exist",
+  "daySunday": "Sunday",
+  "dayMonday": "Monday",
+  "dayTuesday": "Tuesday",
+  "dayWednesday": "Wednesday",
+  "dayThursday": "Thursday",
+  "dayFriday": "Friday",
+  "daySaturday": "Saturday"
 }

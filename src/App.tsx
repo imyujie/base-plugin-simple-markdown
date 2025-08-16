@@ -14,8 +14,11 @@ import {
   MDXEditorMethods,
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
+import { fixMarkdown } from './utils/markdownFixer';
 import { textReplacePlugin } from './components/TextReplacePlugin';
 import { tooltipPlugin } from './components/TooltipPlugin';
+import { statusPlugin } from './components/StatusPlugin';
+import { templatePlugin } from './components/TemplatePlugin';
 
 const markdownToSegments = (markdown: string): IOpenSegment[] => {
   markdown = markdown.replace(/ +$/gm, '');
@@ -63,9 +66,9 @@ export default function App() {
   const [selectedCellContent, setSelectedCellContent] = useState<string>('');
   const [isTextCell, setIsTextCell] = useState<boolean>(false);
   const editorRef = useRef<MDXEditorMethods>(null);
+  const [activeSelection, setActiveSelection] = useState<any>(null);
 
-  const debouncedUpdateCell = useRef(debounce(async (markdown: string) => {
-    const selection = await bitable.base.getSelection();
+  const debouncedUpdateCell = useRef(debounce(async (markdown: string, selection: any) => {
     if (selection && selection.recordId && selection.fieldId && selection.tableId) {
       const table = await bitable.base.getTableById(selection.tableId);
       const segments = markdownToSegments(markdown);
@@ -75,8 +78,11 @@ export default function App() {
 
   useEffect(() => {
     const handleSelectionChange = async () => {
+      debouncedUpdateCell.flush();
+      debouncedUpdateCell.cancel();
       try {
         const selection = await bitable.base.getSelection();
+        setActiveSelection(selection);
         if (selection && selection.recordId && selection.fieldId && selection.tableId) {
           const table = await bitable.base.getTableById(selection.tableId);
           const field = await table.getField(selection.fieldId);
@@ -136,8 +142,11 @@ export default function App() {
     handleSelectionChange();
 
     const unsubscribe = bitable.base.onSelectionChange(handleSelectionChange);
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      debouncedUpdateCell.flush();
+      unsubscribe();
+    };
+  }, [debouncedUpdateCell]);
 
   useEffect(() => {
     if (isTextCell && editorRef.current) {
@@ -146,9 +155,13 @@ export default function App() {
   }, [selectedCellContent, isTextCell]);
 
   const handleEditorChange = useCallback((markdown: string) => {
-    markdown = markdown.replace(/&#x20;\n/g, '\n');
-    debouncedUpdateCell(markdown);
-  }, [debouncedUpdateCell]);
+    console.log('markdown', markdown)
+    const correctedMarkdown = fixMarkdown(markdown);
+    console.log('correctedMarkdown', correctedMarkdown)
+    if (activeSelection) {
+      debouncedUpdateCell(correctedMarkdown, activeSelection);
+    }
+  }, [debouncedUpdateCell, activeSelection]);
 
   return (
     <main className="main">
@@ -161,7 +174,9 @@ export default function App() {
             placeholder={t('clickToInput')}
             contentEditableClassName="markdown-editor"
             plugins={[
+              statusPlugin(),
               tooltipPlugin(),
+              templatePlugin(),
               headingsPlugin(),
               listsPlugin(),
               linkPlugin(),

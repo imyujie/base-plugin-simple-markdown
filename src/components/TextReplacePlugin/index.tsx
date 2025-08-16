@@ -47,10 +47,11 @@ function textReplaceTransform(node: TextNode) {
 
   const triggers: Record<string, () => Date> = {
     '@td ': () => new Date(),
+    '@today ': () => new Date(),
     '@今天 ': () => new Date(),
     '@tmr ': tomorrow,
     '@明天 ': tomorrow,
-    '@tat ': afterTomorrow,
+    '@dat ': afterTomorrow,
     '@后天 ': afterTomorrow,
     '@mon ': () => getNextDayOfWeek(1),
     '@周一 ': () => getNextDayOfWeek(1),
@@ -67,11 +68,22 @@ function textReplaceTransform(node: TextNode) {
     '@本周三 ': () => getThisWeekDay(3),
     '@本周四 ': () => getThisWeekDay(4),
     '@本周五 ': () => getThisWeekDay(5),
+    '@本周六 ': () => getThisWeekDay(6),
+    '@本周日 ': () => getThisWeekDay(7),
+    '@这周一 ': () => getThisWeekDay(1),
+    '@这周二 ': () => getThisWeekDay(2),
+    '@这周三 ': () => getThisWeekDay(3),
+    '@这周四 ': () => getThisWeekDay(4),
+    '@这周五 ': () => getThisWeekDay(5),
+    '@这周六 ': () => getThisWeekDay(6),
+    '@这周日 ': () => getThisWeekDay(7),
     '@下周一 ': () => getNextWeekDay(1),
     '@下周二 ': () => getNextWeekDay(2),
     '@下周三 ': () => getNextWeekDay(3),
     '@下周四 ': () => getNextWeekDay(4),
     '@下周五 ': () => getNextWeekDay(5),
+    '@下周六 ': () => getNextWeekDay(6),
+    '@下周日 ': () => getNextWeekDay(7),
   };
 
   for (const trigger in triggers) {

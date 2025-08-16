@@ -1,5 +1,19 @@
 {
   "title": "Markdown 编辑器",
   "selectTextCell": "请选择一个多行文本单元格",
-  "clickToInput": "点击输入"
+  "clickToInput": "点击输入",
+  "statusInProgress": "进展正常",
+  "statusAtRisk": "有风险",
+  "statusOffTrack": "进度滞后",
+  "statusNotUpdated": "未更新",
+  "slashCommandMenuTitle": "状态",
+  "invalidDateFormat": "日期格式无效",
+  "dateDoesNotExist": "日期不存在",
+  "daySunday": "周日",
+  "dayMonday": "周一",
+  "dayTuesday": "周二",
+  "dayWednesday": "周三",
+  "dayThursday": "周四",
+  "dayFriday": "周五",
+  "daySaturday": "周六"
 }
