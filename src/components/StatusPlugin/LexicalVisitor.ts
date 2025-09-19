@@ -1,15 +1,15 @@
-import { $isStatusNode, StatusNode } from './StatusNode';
+import { $isStatusNode, StatusNode, StatusType } from './StatusNode';
 import type { LexicalExportVisitor, MdastImportVisitor } from '@mdxeditor/editor';
 import type { Text } from 'mdast';
 import { $createStatusNode } from './StatusNode';
 import { $isElementNode } from 'lexical';
+import { statusOptions } from './statusOptions';
 
-export const STATUS_KEYWORD_MAP: Record<string, 'in-progress' | 'at-risk' | 'off-track' | 'not-updated'> = {
-  '进展正常': 'in-progress',
-  '有风险': 'at-risk',
-  '进度滞后': 'off-track',
-  '未更新': 'not-updated'
-};
+export const STATUS_KEYWORD_MAP: Record<string, StatusType> = statusOptions.reduce((acc, option) => {
+  acc[option.label] = option.value as StatusType;
+  return acc;
+}, {} as Record<string, StatusType>);
+
 
 export const LexicalStatusVisitor: LexicalExportVisitor<StatusNode, Text> = {
   testLexicalNode: $isStatusNode,

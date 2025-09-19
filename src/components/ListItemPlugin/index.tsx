@@ -1,28 +1,21 @@
 import {
   realmPlugin,
-  addLexicalNode$,
-  addExportVisitor$,
-  createRootEditorSubscription$,
-  addImportVisitor$,
   addComposerChild$,
+  createRootEditorSubscription$,
+  insertMarkdown$ 
 } from '@mdxeditor/editor';
-import { StatusNode } from './StatusNode';
-import { LexicalStatusVisitor, MdastStatusVisitor, STATUS_KEYWORD_MAP } from './LexicalVisitor';
 import {
   $getSelection,
   $isRangeSelection,
-  $createTextNode,
   COMMAND_PRIORITY_LOW,
   createCommand,
   LexicalCommand,
-  TextNode,
 } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import React, { useEffect, useState, useCallback } from 'react';
-import { $createStatusNode } from './StatusNode';
-import { statusOptions } from './statusOptions';
+import { templates } from './templates';
 
-export const INSERT_STATUS_COMMAND: LexicalCommand<string> = createCommand();
+export const INSERT_LIST_ITEM_COMMAND: LexicalCommand<string> = createCommand();
 
 const CommandMenu = () => {
   const [editor] = useLexicalComposerContext();
@@ -30,18 +23,18 @@ const CommandMenu = () => {
   const [menuPosition, setMenuPosition] = useState<{ top: number, left: number } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const handleSelect = useCallback((status: string) => {
-    editor.dispatchCommand(INSERT_STATUS_COMMAND, status);
+  const handleSelect = useCallback((markdown: string) => {
+    editor.dispatchCommand(INSERT_LIST_ITEM_COMMAND, markdown);
     setIsOpen(false);
   }, [editor]);
 
-  const handleSlashCommand = useCallback(() => {
+  const handleCommand = useCallback(() => {
     const selection = $getSelection();
     if ($isRangeSelection(selection) && selection.isCollapsed()) {
       const node = selection.anchor.getNode();
       const offset = selection.anchor.offset;
       const text = node.getTextContent().substring(0, offset);
-      if (text.endsWith('/')) {
+      if (text.endsWith('--')) {
         const domSelection = window.getSelection();
         if (domSelection && domSelection.rangeCount > 0) {
           const range = domSelection.getRangeAt(0);
@@ -62,25 +55,25 @@ const CommandMenu = () => {
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
-        handleSlashCommand();
+        handleCommand();
       });
     });
-  }, [editor, handleSlashCommand]);
+  }, [editor, handleCommand]);
 
   useEffect(() => {
     if (isOpen) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'ArrowDown') {
           e.preventDefault();
-          setSelectedIndex((prev) => (prev + 1) % statusOptions.length);
+          setSelectedIndex((prev) => (prev + 1) % templates.length);
         } else if (e.key === 'ArrowUp') {
           e.preventDefault();
-          setSelectedIndex((prev) => (prev - 1 + statusOptions.length) % statusOptions.length);
+          setSelectedIndex((prev) => (prev - 1 + templates.length) % templates.length);
         } else if (e.key === 'Enter') {
           e.preventDefault();
           e.stopPropagation();
           if (selectedIndex !== -1) {
-            handleSelect(statusOptions[selectedIndex].value);
+            handleSelect(templates[selectedIndex].markdown);
           }
         } else if (e.key === 'Escape') {
           e.preventDefault();
@@ -108,11 +101,11 @@ const CommandMenu = () => {
         zIndex: 1000,
       }}
     >
-      {statusOptions.map((option, index) => (
+      {templates.map((template, index) => (
         <div
-          key={option.value}
+          key={template.name}
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => handleSelect(option.value)}
+          onClick={() => handleSelect(template.markdown)}
           style={{
             cursor: 'pointer',
             padding: '4px 8px',
@@ -123,57 +116,26 @@ const CommandMenu = () => {
             background: selectedIndex === index ? '#eee' : 'transparent'
           }}
         >
-          {option.label}
+          {template.name}
         </div>
       ))}
     </div>
   ) : null;
 };
 
-export const statusPlugin = realmPlugin({
+export const listItemPlugin = realmPlugin({
   init: (realm) => {
-    realm.pub(addLexicalNode$, StatusNode);
-    realm.pub(addExportVisitor$, LexicalStatusVisitor);
-    realm.pub(addImportVisitor$, MdastStatusVisitor);
     realm.pub(addComposerChild$, CommandMenu);
 
     realm.pub(createRootEditorSubscription$, (editor) => {
-      editor.registerNodeTransform(TextNode, (node: TextNode) => {
-        const text = node.getTextContent();
-        const keywords = Object.keys(STATUS_KEYWORD_MAP);
-        const keywordRegex = new RegExp(keywords.join('|'), 'g');
-        const parts = text.split(keywordRegex);
-        if (parts.length === 1) {
-          return;
-        }
-        const newNodes = [];
-        let lastIndex = 0;
-        text.replace(keywordRegex, (match, offset) => {
-          const prevText = text.substring(lastIndex, offset);
-          if (prevText) {
-            newNodes.push($createTextNode(prevText));
-          }
-          newNodes.push($createStatusNode(STATUS_KEYWORD_MAP[match as keyof typeof STATUS_KEYWORD_MAP]));
-          lastIndex = offset + match.length;
-          return match;
-        });
-        const remainingText = text.substring(lastIndex);
-        if (remainingText) {
-          newNodes.push($createTextNode(remainingText));
-        }
-        node.replace(newNodes[0]);
-        for (let i = 1; i < newNodes.length; i++) {
-          newNodes[i-1].insertAfter(newNodes[i]);
-        }
-      });
       const unregisterCommand = editor.registerCommand(
-        INSERT_STATUS_COMMAND,
+        INSERT_LIST_ITEM_COMMAND,
         (payload: string) => {
           const selection = $getSelection();
           if ($isRangeSelection(selection)) {
             selection.deleteCharacter(true);
-            const statusNode = $createStatusNode(payload as any);
-            selection.insertNodes([statusNode]);
+            selection.deleteCharacter(true);
+            realm.pub(insertMarkdown$, payload);
           }
           return true;
         },

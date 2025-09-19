@@ -11,27 +11,15 @@ import type {
 } from 'lexical';
 import { DecoratorNode } from 'lexical';
 import React from 'react';
+import { statusOptions } from './statusOptions';
 
-const statusDisplay = {
-  'in-progress': {
-    label: '进展正常',
-    color: 'rgb(0, 144, 74)',
-  },
-  'at-risk': {
-    label: '有风险',
-    color: 'rgba(180, 83, 9, 1)',
-  },
-  'off-track': {
-    label: '进度滞后',
-    color: 'rgba(185, 28, 28, 1)',
-  },
-  'not-updated': {
-    label: '未更新',
-    color: 'rgba(55, 65, 81, 1)',
-  },
-};
+const statusDisplay = statusOptions.reduce((acc, option) => {
+  acc[option.value] = { label: option.label, color: option.color };
+  return acc;
+}, {} as Record<string, { label: string, color: string }>);
 
-type StatusType = keyof typeof statusDisplay;
+
+export type StatusType = typeof statusOptions[number]['value'];
 
 function StatusComponent({ status }: { status: StatusType }) {
   const { label, color } = statusDisplay[status];

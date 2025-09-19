@@ -19,6 +19,7 @@ import { textReplacePlugin } from './components/TextReplacePlugin';
 import { tooltipPlugin } from './components/TooltipPlugin';
 import { statusPlugin } from './components/StatusPlugin';
 import { templatePlugin } from './components/TemplatePlugin';
+import { listItemPlugin } from './components/ListItemPlugin';
 
 const markdownToSegments = (markdown: string): IOpenSegment[] => {
   markdown = markdown.replace(/ +$/gm, '');
@@ -64,6 +65,7 @@ const markdownToSegments = (markdown: string): IOpenSegment[] => {
 export default function App() {
   const { t } = useTranslation();
   const [selectedCellContent, setSelectedCellContent] = useState<string>('');
+  const [initialContent, setInitialContent] = useState('');
   const [isTextCell, setIsTextCell] = useState<boolean>(false);
   const editorRef = useRef<MDXEditorMethods>(null);
   const [activeSelection, setActiveSelection] = useState<any>(null);
@@ -124,15 +126,18 @@ export default function App() {
           setIsTextCell(isText);
 
           if (isText) {
-            // console.log("is Text：", cellValue);
-            setSelectedCellContent(cellValue.replace(/ +$/gm, ''));
+            const content = cellValue.replace(/ +$/gm, '');
+            setSelectedCellContent(content);
+            setInitialContent(content);
           } else {
             setIsTextCell(false);
             setSelectedCellContent('');
+            setInitialContent('');
           }
         } else {
           setIsTextCell(false);
           setSelectedCellContent('');
+          setInitialContent('');
         }
       } catch (error) {
         console.error('Error handling selection change:', error);
@@ -155,13 +160,14 @@ export default function App() {
   }, [selectedCellContent, isTextCell]);
 
   const handleEditorChange = useCallback((markdown: string) => {
-    console.log('markdown', markdown)
-    const correctedMarkdown = fixMarkdown(markdown);
-    console.log('correctedMarkdown', correctedMarkdown)
-    if (activeSelection) {
-      debouncedUpdateCell(correctedMarkdown, activeSelection);
+    if (markdown !== initialContent) {
+      // console.log('Content has changed, updating the table cell.');
+      const correctedMarkdown = fixMarkdown(markdown);
+      if (activeSelection) {
+        debouncedUpdateCell(correctedMarkdown, activeSelection);
+      }
     }
-  }, [debouncedUpdateCell, activeSelection]);
+  }, [debouncedUpdateCell, activeSelection, initialContent]);
 
   return (
     <main className="main">
@@ -177,6 +183,7 @@ export default function App() {
               statusPlugin(),
               tooltipPlugin(),
               templatePlugin(),
+              listItemPlugin(),
               headingsPlugin(),
               listsPlugin(),
               linkPlugin(),
